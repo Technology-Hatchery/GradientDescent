@@ -1,0 +1,7 @@
+Price, Decision
+50, Buy
+25, Buy
+60, Sell
+1, Buy
+70, Sell
+30, Buy
