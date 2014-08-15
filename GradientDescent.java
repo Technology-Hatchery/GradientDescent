@@ -6,101 +6,172 @@ import java.util.StringTokenizer;
 
 public class GradientDescent {
 
-    static double x[][] = new double[7][300], y[] = new double[300];
-    static double alpha = 0.01, theta[] = new double[7];
+    //TODO Make the number of theta not hard-coded.
+    static final int NUM_THETA = 6;
+    static final int MAX_TRAINING = 300;
+    static final int MAX_TESTING = 100;
+    static final double STEP_SIZE = 0.01;   //Determines the step size
+    static final int MAX_ITERATIONS = 50000;
+    static final double MAX_ERROR = 0.00001;
+
+    static double x[][] = new double[NUM_THETA][MAX_TRAINING];
+    static double z[][] = new double[NUM_THETA][MAX_TESTING];
+    static double y[] = new double[MAX_TRAINING];
+    static double za[] = new double[MAX_TESTING];
+    //static double x[][] = new double[7][300], y[] = new double[300];
+    static double theta[] = new double[NUM_THETA];
 
     public static void main(String[] args) throws IOException {
-        // TODO Auto-generated method stub
-        int t;
-        int i = 0;
-        int k = 0;
-        int w = 0;
-        double deriva;
-        double theta0;
+        //int t;
+        /*double theta0;
         double theta1;
         double theta2;
         double theta3;
         double theta4;
         double theta5;
-        double theta6;
-        double z[] = new double[100];
+        double theta6;*/
+
 
         //initialize theta array
-        for (i = 0; i < 7; i++) {
+        for (int i = 0; i < NUM_THETA; i++) {
             theta[i] = 0;
         }
 
         //Read input from "machine.txt" for training
-        BufferedReader in = new BufferedReader(new FileReader("machine.txt"));
-
+        BufferedReader in = new BufferedReader(new FileReader("condos_training.csv"));
+        int curInput = 0;
         while (in.ready()) {
             String text = in.readLine();
             StringTokenizer tokens = new StringTokenizer(text, ",");
-            t = tokens.countTokens();
-            x[0][k] = 1;
-            for (i = 1; i < t; i++) {
-                x[i][k] = Double.parseDouble(tokens.nextToken());
+            int t = tokens.countTokens();
+            //First input is 1
+            x[0][curInput] = 1;
+            //Reads in all the inputs, except for the last column
+            for (int i = 1; i < t; i++) {
+                x[i][curInput] = Double.parseDouble(tokens.nextToken());
             }
-            y[k] = Double.parseDouble(tokens.nextToken());
-            k++;
+            //The last input is read into the y vector
+            y[curInput] = Double.parseDouble(tokens.nextToken());
+            curInput++;
         }
-        //Doing feature Scaling
-        int p = 0;
-        for (i = 0; i < 7; i++) {
-            double max = x[i][p];
-            for (p = 1; p < k; p++) {
-                if (x[i][p] > max) {
-                    max = x[i][p];
-                }
-            }
-            z[i] = z[i] / max;
-            for (p = 0; p < k; p++) {
-                x[i][p] = x[i][p] / max;
-            }
-        }
-        do {
-            theta0 = theta[0];
-            theta1 = theta[1];
-            theta2 = theta[2];
-            theta3 = theta[3];
-            theta4 = theta[4];
-            theta5 = theta[5];
-            theta6 = theta[6];
-            for (i = 0; i < 7; i++) {
-                //Calculating Simultaneous derivating and updating
-                deriva = derivative(i, k, theta0, theta1, theta2, theta3, theta4, theta5, theta6);
-                theta[i] = theta[i] - alpha * deriva;
-            }
-            w++;
-            //System.out.println("theta0 is : " +theta[0]+ "theta1 is :" +theta[1]+ "theta2 is :" +theta[2]+ "theta3 is :" +theta[3]+ "theta4 is :" +theta[4]+ "theta5 is :" +theta[5]+ "theta6 is :" +theta[6]);
-        }
-        while (w < 400);
-        System.out.println("Final Thetas Values::");
-        System.out.println("theta 0 is : " + theta[0] + "\n" + "theta 1 is :" + theta[1] + "\n" + "theta 2 is :" + theta[2] + "\n" + "theta3 is :" + theta[3] + "\n" + "theta4 is :" + theta[4] + "\n" + "theta5 is :" + theta[5] + "\n" + "theta6 is :" + theta[6]);
-        BufferedReader out = new BufferedReader(new FileReader("testing.txt"));
+        int numInputs = curInput;
+        in.close();
+
+        //Reads in testing file
+        BufferedReader out = new BufferedReader(new FileReader("condos_testing.csv"));
+        curInput = 0;
         while (out.ready()) {
             String text = out.readLine();
             StringTokenizer tokens = new StringTokenizer(text, ",");
-            t = tokens.countTokens();
-            z[0] = 1;
-            for (i = 1; i <= t; i++) {
-                z[i] = Double.parseDouble(tokens.nextToken());
+            int t = tokens.countTokens();
+            z[0][curInput] = 1;
+            for (int i = 1; i < t; i++) {
+                z[i][curInput] = Double.parseDouble(tokens.nextToken());
             }
-            double ans = theta[0] + (theta[1] * z[1]) / 480 + (theta[2] * z[2]) / 8000 + (theta[3] * z[3]) / 64000 + (z[4] * theta[4]) / 128 + (z[5] * theta[5]) / 52 + (z[6] * theta[6]) / 176;
-            System.out.println("Expected Output :" + ans + " Actual Output :" + z[7]);
+            za[curInput] = Double.parseDouble(tokens.nextToken());
+            curInput++;
         }
-        in.close();
+        int numTest = curInput;
+        out.close();
+
+        //Doing feature Scaling
+        //TODO convert this into max function
+        //Find the maximum value
+
+
+        for (int i = 0; i < NUM_THETA; i++) {   //0 to 7 must have to do with the theta going from 0 to 7
+            //Find the max by theta and
+            double max = x[i][0];
+            //We looked at the first input for this theta above.  Now search through the rest of the inputs
+            for (int j = 1; j < numInputs; j++) {
+                if (x[i][j] > max) {
+                    max = x[i][j];
+                }
+            }
+
+            //Scale thetas in inputs from 0 to 1
+            for (int j = 0; j < numInputs; j++) {
+                if (x[i][j]!=0 || max!=0) {
+                    x[i][j] = x[i][j] / max;
+                }
+            }
+            //Scales thetas in test from 0 to 1
+            for (int j = 0; j < numTest; j++) {   //0 to 7 must have to do with the theta going from 0 to 7
+                if (z[i][j] != 0 || max != 0) {
+                    z[i][j] = z[i][j] / max;      //This is originally set to all 0's
+                }
+            }
+        }
+
+        int iteration = 0;
+        double derivative;
+        double thetaDifference;
+        double theta_old[] = new double[NUM_THETA];
+        do {
+            System.arraycopy(theta,0,theta_old,0,NUM_THETA);
+            for (int i = 0; i < NUM_THETA; i++) {
+                //Calculating simultaneous derivative and updating
+                derivative = getDerivative(i, numInputs, theta);
+                //derivative = derivative(i, k, theta0, theta1, theta2, theta3, theta4, theta5, theta6);
+                theta[i] = theta[i] - STEP_SIZE * derivative;
+            }
+            thetaDifference = 0;
+            for (int i = 0; i < NUM_THETA; i++) {
+                thetaDifference += Math.abs((theta[i]-theta_old[i])/theta[i]);
+            }
+            thetaDifference = thetaDifference/NUM_THETA;
+            iteration++;
+            //System.out.println("theta0 is : " +theta[0]+ "theta1 is :" +theta[1]+ "theta2 is :" +theta[2]+ "theta3 is :" +theta[3]+ "theta4 is :" +theta[4]+ "theta5 is :" +theta[5]+ "theta6 is :" +theta[6]);
+        } while (iteration < MAX_ITERATIONS && thetaDifference > MAX_ERROR);    //execute the above loop 400 times
+
+        System.out.println("Final Iterations: " + iteration);
+        System.out.println("Final thetaDifference: " + thetaDifference);
+
+        System.out.println("Final Thetas Values::");
+        //System.out.println("theta 0 is : " + theta[0] + "\n" + "theta 1 is :" + theta[1] + "\n" + "theta 2 is :" + theta[2] + "\n" + "theta3 is :" + theta[3] + "\n" + "theta4 is :" + theta[4] + "\n" + "theta5 is :" + theta[5] + "\n" + "theta6 is :" + theta[6]);
+        String output = "";
+        for (int j=0; j < NUM_THETA; j++) {
+            output = output + "theta " + j + " is : " + theta[j] + "\n";
+        }
+        System.out.println(output);
+
+        //Show results from test set
+        for (int i=0; i < numTest; i++) {
+            //double ans = theta[0] + (theta[1] * z[1]) / 480 + (theta[2] * z[2]) / 8000 + (theta[3] * z[3]) / 64000 + (z[4] * theta[4]) / 128 + (z[5] * theta[5]) / 52 + (z[6] * theta[6]) / 176;
+            double ans = 0;
+            for (int j=0; j < NUM_THETA; j++) {
+                ans += theta[j]*z[j][i];
+            }
+            System.out.println("Expected Output: " + ans + " Actual Output: " + za[i]);
+        }
+
 
     }
 
-    private static double derivative(int i, int k, double a, double b, double c, double d, double e, double f, double h) {
-        // TODO Auto-generated method stub
-        int g;
-        double sum = 0;
-        for (g = 0; g < k; g++) {
-            sum = sum + ((y[g] - (a * x[0][g] + b * x[1][g] + c * x[2][g] + d * x[3][g] + e * x[4][g] + f * x[5][g] + h * x[6][g])) * x[i][g]);
+    //This should be the derivative of the error function since this is what we are minimizing
+    //private static double derivative(int i, int k, double a, double b, double c, double d, double e, double f, double h) {
+    private static double getDerivative(int curTheta, int numInputs, double[] theta) {
+        double sumWeightedError = 0;
+        for (int curInput = 0; curInput < numInputs; curInput++) {
+            //sum = sum + ((y[g] - (a * x[0][g] + b * x[1][g] + c * x[2][g] + d * x[3][g] + e * x[4][g] + f * x[5][g] + h * x[6][g])) * x[i][g]);
+            double curEstimated = 0;
+            for (int j = 0; j < NUM_THETA; j++) {
+                curEstimated += theta[j] * x[j][curInput];
+            }
+            double curActual = y[curInput];
+            double curError = curActual - curEstimated;
+            //This is a weighted sum of the errors.
+            //For each input value it calculates the error using the current theta.
+            //Then it scales that takes the sum of those errors over all the inputs,
+            //  scaled by the input that corresponds to the desired theta
+            //Then it takes the average of the errors and returns -2 times that
+            sumWeightedError = sumWeightedError + (curError * x[curTheta][curInput]);
         }
-        return -2 * sum / k;
+        double normalizedError = sumWeightedError / numInputs;      //Average curError*x[curTheta][curInput]
+        //If the error is positive, reduce this theta to reduce the error from these points
+        //Increasing theta will decrease the error since it will increase curEstimated
+        //  We multiply by a negative factor to return the derivative when moving in a positive direction
+        return -2 * normalizedError;
     }
 
 }
