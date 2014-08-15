@@ -6,13 +6,13 @@ import java.util.StringTokenizer;
 
 public class GradientDescent {
 
-    //TODO Make the number of theta not hard-coded.
-    static final int NUM_THETA = 6;
+    static final int NUM_FEATURES = 9;
     static final int MAX_TRAINING = 300;
     static final int MAX_TESTING = 100;
     static final double STEP_SIZE = 0.01;   //Determines the step size
-    static final int MAX_ITERATIONS = 50000;
+    static final int MAX_ITERATIONS = 500000;
     static final double MAX_ERROR = 0.00001;
+    static final int NUM_THETA = NUM_FEATURES*2+1;
 
     static double x[][] = new double[NUM_THETA][MAX_TRAINING];
     static double z[][] = new double[NUM_THETA][MAX_TESTING];
@@ -34,7 +34,11 @@ public class GradientDescent {
 
         //initialize theta array
         for (int i = 0; i < NUM_THETA; i++) {
-            theta[i] = 0;
+            if (i <= NUM_FEATURES+1) {
+                theta[i] = 1;
+            } else {
+                theta[i] = 0;
+            }
         }
 
         //Read input from "machine.txt" for training
@@ -49,6 +53,8 @@ public class GradientDescent {
             //Reads in all the inputs, except for the last column
             for (int i = 1; i < t; i++) {
                 x[i][curInput] = Double.parseDouble(tokens.nextToken());
+                //Also store the square of the feature
+                x[i+NUM_FEATURES*1][curInput] = Math.pow(x[i][curInput],2);
             }
             //The last input is read into the y vector
             y[curInput] = Double.parseDouble(tokens.nextToken());
@@ -56,6 +62,8 @@ public class GradientDescent {
         }
         int numInputs = curInput;
         in.close();
+
+
 
         //Reads in testing file
         BufferedReader out = new BufferedReader(new FileReader("condos_testing.csv"));
@@ -67,6 +75,8 @@ public class GradientDescent {
             z[0][curInput] = 1;
             for (int i = 1; i < t; i++) {
                 z[i][curInput] = Double.parseDouble(tokens.nextToken());
+                //Also store the square of the feature
+                z[i+NUM_FEATURES*1][curInput] = Math.pow(z[i][curInput],2);
             }
             za[curInput] = Double.parseDouble(tokens.nextToken());
             curInput++;
@@ -119,7 +129,7 @@ public class GradientDescent {
             for (int i = 0; i < NUM_THETA; i++) {
                 thetaDifference += Math.abs((theta[i]-theta_old[i])/theta[i]);
             }
-            thetaDifference = thetaDifference/NUM_THETA;
+            thetaDifference = thetaDifference/(NUM_THETA);
             iteration++;
             //System.out.println("theta0 is : " +theta[0]+ "theta1 is :" +theta[1]+ "theta2 is :" +theta[2]+ "theta3 is :" +theta[3]+ "theta4 is :" +theta[4]+ "theta5 is :" +theta[5]+ "theta6 is :" +theta[6]);
         } while (iteration < MAX_ITERATIONS && thetaDifference > MAX_ERROR);    //execute the above loop 400 times
@@ -144,8 +154,6 @@ public class GradientDescent {
             }
             System.out.println("Expected Output: " + ans + " Actual Output: " + za[i]);
         }
-
-
     }
 
     //This should be the derivative of the error function since this is what we are minimizing
